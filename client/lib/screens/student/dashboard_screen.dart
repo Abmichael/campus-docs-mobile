@@ -3,31 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/request.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/student_dashboard_provider.dart';
+import '../../providers/user_profile_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Replace with actual data provider
-    final recentRequests = [
-      Request(
-        id: '1',
-        type: RequestType.letter,
-        status: RequestStatus.pending,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedAt: DateTime.now(),
-        notes: 'Request for enrollment verification',
-      ),
-      Request(
-        id: '2',
-        type: RequestType.transcript,
-        status: RequestStatus.approved,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 1)),
-        notes: 'Official transcript request',
-      ),
-    ];
+    final recentRequestsAsync = ref.watch(recentRequestsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,23 +26,57 @@ class DashboardScreen extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+        padding: const EdgeInsets.all(16),        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Welcome, Student!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Consumer(
+              builder: (context, ref, child) {
+                final greeting = ref.watch(userGreetingProvider);
+                return Text(
+                  greeting,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                );
+              },
             ),
             const SizedBox(height: 24),
-            _buildQuickActions(context),
-            const SizedBox(height: 24),
+            _buildQuickActions(context),            const SizedBox(height: 24),
             const Text(
               'Recent Requests',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            ...recentRequests.map((request) => _RequestCard(request: request)),
+            recentRequestsAsync.when(              data: (recentRequests) {
+                if (recentRequests.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: Text('No recent requests found'),
+                    ),
+                  );
+                }
+                return RefreshIndicator(
+                  onRefresh: () => ref.refresh(recentRequestsProvider.future),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: recentRequests.map((request) => _RequestCard(request: request)).toList(),
+                    ),
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (error, stackTrace) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Text('Error loading requests: ${error.toString()}'),
+                ),
+              ),
+            ),
           ],
         ),
       ),

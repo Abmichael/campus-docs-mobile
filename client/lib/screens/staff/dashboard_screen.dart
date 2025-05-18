@@ -1,31 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/request.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/staff_dashboard_provider.dart';
+import '../../providers/user_profile_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Replace with actual data provider
-    final pendingRequests = [
-      Request(
-        id: '1',
-        type: RequestType.letter,
-        status: RequestStatus.pending,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedAt: DateTime.now(),
-      ),
-      Request(
-        id: '2',
-        type: RequestType.transcript,
-        status: RequestStatus.pending,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        updatedAt: DateTime.now(),
-      ),
-    ];
+    final pendingRequestsAsync = ref.watch(pendingRequestsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -39,35 +23,66 @@ class DashboardScreen extends ConsumerWidget {
             },
           ),
         ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      ),      body: Padding(
+        padding: const EdgeInsets.all(16.0),        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Pending Requests',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          children: [            Consumer(
+              builder: (context, ref, child) {
+                final greeting = ref.watch(userGreetingProvider);
+                
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Pending Requests',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: pendingRequests.length,
-                itemBuilder: (context, index) {
-                  final request = pendingRequests[index];
-                  return Card(
-                    child: ListTile(
-                      title: Text('${request.type.name.toUpperCase()} Request'),
-                      subtitle: Text(
-                        'Created: ${request.createdAt.toString().split('.')[0]}',
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () {
-                        // TODO: Navigate to request details
+            const SizedBox(height: 16),Expanded(
+              child: pendingRequestsAsync.when(
+                data: (pendingRequests) {
+                  if (pendingRequests.isEmpty) {
+                    return const Center(
+                      child: Text('No pending requests found'),
+                    );
+                  }
+                  
+                  return RefreshIndicator(
+                    onRefresh: () => ref.refresh(pendingRequestsProvider.future),
+                    child: ListView.builder(
+                      itemCount: pendingRequests.length,
+                      itemBuilder: (context, index) {
+                        final request = pendingRequests[index];
+                        return Card(
+                          child: ListTile(
+                            title: Text('${request.type.name.toUpperCase()} Request'),
+                            subtitle: Text(
+                              'Created: ${request.createdAt.toString().split('.')[0]}',
+                            ),
+                            trailing: const Icon(Icons.arrow_forward_ios),
+                            onTap: () {
+                              // TODO: Navigate to request details
+                            },
+                          ),
+                        );
                       },
                     ),
                   );
                 },
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                error: (error, stackTrace) => Center(
+                  child: Text('Error loading requests: ${error.toString()}'),
+                ),
               ),
             ),
           ],

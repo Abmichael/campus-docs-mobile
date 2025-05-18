@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
+import '../config/api_config.dart';
+import 'dart:convert';
 
 class AuthState {
   final User? user;
@@ -41,7 +43,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final ApiClient _apiClient;
   final SharedPreferences _prefs;
   static const _userKey = 'cached_user';
-  static const _tokenKey = 'cached_token';
 
   AuthNotifier(this._apiClient, this._prefs) : super(const AuthState()) {
     _initializeFromCache();
@@ -49,13 +50,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _initializeFromCache() async {
     final userJson = _prefs.getString(_userKey);
-    final token = _prefs.getString(_tokenKey);
+    final token = await ApiConfig.token;
 
     if (userJson != null && token != null) {
       try {
-        final user = User.fromJson(
-          Map<String, dynamic>.from(Map<String, dynamic>.from(userJson as Map)),
-        );
+        final user = User.fromJson(json.decode(userJson));
         state = state.copyWith(
           user: user.copyWith(token: token),
           isLoading: false,
@@ -68,13 +67,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> _saveToCache(User user, String token) async {
-    await _prefs.setString(_userKey, user.toJson().toString());
-    await _prefs.setString(_tokenKey, token);
+    await _prefs.setString(_userKey, json.encode(user.toJson()));
+    await ApiConfig.setToken(token);
   }
 
   Future<void> _clearCache() async {
     await _prefs.remove(_userKey);
-    await _prefs.remove(_tokenKey);
+    await ApiConfig.clearToken();
   }
 
   Future<void> login(String email, String password) async {
@@ -86,8 +85,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'password': password,
       });
 
+      print('Debug - Login response token: ${response.token}');
+
       final user = response.user.copyWith(token: response.token);
       await _saveToCache(user, response.token);
+
+      final storedToken = await ApiConfig.token;
+      print('Debug - Stored token after login: $storedToken');
 
       state = state.copyWith(user: user, isLoading: false, error: null);
     } on DioException catch (e) {
@@ -107,14 +111,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      await _apiClient.logout();
       await _clearCache();
       state = const AuthState();
-    } on DioException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.error?.toString() ?? 'An error occurred during logout',
-      );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

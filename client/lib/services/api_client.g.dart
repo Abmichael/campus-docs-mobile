@@ -22,7 +22,7 @@ Map<String, dynamic> _$$LoginResponseImplToJson(_$LoginResponseImpl instance) =>
 // RetrofitGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations
+// ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element
 
 class _ApiClient implements ApiClient {
   _ApiClient(

@@ -6,7 +6,16 @@ const adapter = new JSONFile('db.json');
 const defaultData = {
   users: [],
   requests: [],
-  templates: []
+  templates: [],
+  auditLogs: [],
+  settings: {
+    systemName: 'MIT Mobile App',
+    emailFrom: 'noreply@mit.edu',
+    smtpServer: 'smtp.mit.edu',
+    smtpPort: '587',
+    smtpUsername: '',
+    smtpPassword: ''
+  }
 };
 const db = new Low(adapter, defaultData);
 

@@ -26,7 +26,7 @@ void main() {
 
   test('login success updates auth state', () async {
     // Arrange
-    final user = User(
+    const user = User(
       id: '1',
       name: 'Test User',
       email: 'test@example.com',

@@ -9,22 +9,61 @@ const port = 4000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:4000']
+  origin: ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:4000', 'http://192.168.1.2:4000']
 }));
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const token = req.headers.authorization?.split(' ')[1] || 'No token';
+  console.log(`[${timestamp}] ${req.method} ${req.url} Token: ${token}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Request Body:', req.body);
+  }
+  next();
+});
 
 // LowDB setup
 const adapter = new JSONFile('db.json');
 const defaultData = {
   users: [],
   requests: [],
-  templates: []
+  templates: [],
+  auditLogs: [],
+  settings: {
+    systemName: 'MIT Mobile App',
+    emailFrom: 'noreply@mit.edu',
+    smtpServer: 'smtp.mit.edu',
+    smtpPort: '587',
+    smtpUsername: '',
+    smtpPassword: ''
+  }
 };
 const db = new Low(adapter, defaultData);
 
 // Initialize DB
 await db.read();
 await db.write();
+
+// Audit log middleware
+const auditLogMiddleware = (action) => async (req, res, next) => {
+  const log = {
+    id: nanoid(),
+    action,
+    user: req.user.email,
+    timestamp: new Date().toISOString(),
+    details: req.body
+  };
+  
+  await db.read();
+  if (!db.data.auditLogs) {
+    db.data.auditLogs = [];
+  }
+  db.data.auditLogs.push(log);
+  await db.write();
+  next();
+};
 
 // Auth middleware
 const authMiddleware = async (req, res, next) => {
@@ -78,7 +117,7 @@ app.post('/auth/login', async (req, res) => {
   });
 });
 
-app.post('/auth/logout', authMiddleware, async (req, res) => {
+app.post('/auth/logout', authMiddleware, auditLogMiddleware('logout'), async (req, res) => {
   await db.read();
   const user = db.data.users.find(u => u.id === req.user.id);
   if (user) {
@@ -91,11 +130,11 @@ app.post('/auth/logout', authMiddleware, async (req, res) => {
 // User management routes (admin only)
 app.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
   await db.read();
-  const users = db.data.users.map(({ password, token, ...user }) => user);
+  const users = db.data.users?.map(({ password, token, ...user }) => user) || [];
   res.json(users);
 });
 
-app.post('/users', authMiddleware, adminMiddleware, async (req, res) => {
+app.post('/users', authMiddleware, adminMiddleware, auditLogMiddleware('create_user'), async (req, res) => {
   const { name, email, password, role } = req.body;
   if (!name || !email || !password || !role) {
     return res.status(400).json({ error: 'All fields required' });
@@ -122,7 +161,7 @@ app.post('/users', authMiddleware, adminMiddleware, async (req, res) => {
   res.status(201).json(userWithoutSensitive);
 });
 
-app.patch('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
+app.patch('/users/:id', authMiddleware, adminMiddleware, auditLogMiddleware('update_user'), async (req, res) => {
   const { id } = req.params;
   const { name, email, role } = req.body;
 
@@ -147,7 +186,7 @@ app.patch('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
   res.json(userWithoutSensitive);
 });
 
-app.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
+app.delete('/users/:id', authMiddleware, adminMiddleware, auditLogMiddleware('delete_user'), async (req, res) => {
   const { id } = req.params;
   
   await db.read();
@@ -164,20 +203,25 @@ app.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
 // Request routes
 app.get('/requests', authMiddleware, async (req, res) => {
   await db.read();
-  res.json(db.data.requests);
+  let requests = db.data.requests || [];
+  if (req.user.role === 'student') {
+    requests = requests.filter(r => r.userId === req.user.email);
+  }
+  res.json(requests);
 });
 
 app.post('/requests', authMiddleware, async (req, res) => {
-  const { type, userId } = req.body;
-  if (!type || !userId) {
-    return res.status(400).json({ error: 'Type and userId required' });
+  const { type, notes } = req.body;
+  if (!type) {
+    return res.status(400).json({ error: 'Type is required' });
   }
 
   const request = {
     id: nanoid(),
     type,
-    status: 'PENDING',
-    userId,
+    notes: notes || '',
+    status: 'pending',
+    userId: req.user.email,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -208,7 +252,7 @@ app.patch('/requests/:id', authMiddleware, async (req, res) => {
 // Letter template routes
 app.get('/letter-templates', authMiddleware, async (req, res) => {
   await db.read();
-  res.json(db.data.templates);
+  res.json(db.data.templates || []);
 });
 
 app.post('/letter-templates', authMiddleware, async (req, res) => {
@@ -229,6 +273,49 @@ app.post('/letter-templates', authMiddleware, async (req, res) => {
   res.status(201).json(template);
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+// Admin dashboard routes
+app.get('/admin/stats', authMiddleware, adminMiddleware, async (req, res) => {
+  await db.read();
+  const totalUsers = db.data.users.length;
+  const activeRequests = db.data.requests.filter(r => r.status === 'PENDING').length;
+  const pendingApprovals = db.data.requests.filter(r => r.status === 'PENDING').length;
+
+  res.json({
+    totalUsers,
+    activeRequests,
+    pendingApprovals
+  });
+});
+
+// Audit logs endpoint
+app.get('/admin/audit-logs', authMiddleware, adminMiddleware, async (req, res) => {
+  await db.read();
+  res.json(db.data.auditLogs || []);
+});
+
+// System settings endpoints
+app.get('/admin/settings', authMiddleware, adminMiddleware, async (req, res) => {
+  await db.read();
+  res.json(db.data.settings || {});
+});
+
+app.patch('/admin/settings', authMiddleware, adminMiddleware, async (req, res) => {
+  const { systemName, emailFrom, smtpServer, smtpPort, smtpUsername, smtpPassword } = req.body;
+  
+  await db.read();
+  const settings = db.data.settings;
+  
+  if (systemName) settings.systemName = systemName;
+  if (emailFrom) settings.emailFrom = emailFrom;
+  if (smtpServer) settings.smtpServer = smtpServer;
+  if (smtpPort) settings.smtpPort = smtpPort;
+  if (smtpUsername) settings.smtpUsername = smtpUsername;
+  if (smtpPassword) settings.smtpPassword = smtpPassword;
+  
+  await db.write();
+  res.json(settings);
+});
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running at http://0.0.0.0:${port}`);
 }); 

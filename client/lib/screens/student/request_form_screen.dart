@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/request.dart';
+import '../../services/request_service.dart';
 
 class RequestFormScreen extends ConsumerStatefulWidget {
   const RequestFormScreen({super.key});
@@ -11,6 +12,7 @@ class RequestFormScreen extends ConsumerStatefulWidget {
 
 class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _requestService = RequestService();
   RequestType? _selectedType;
   final _notesController = TextEditingController();
   bool _isLoading = false;
@@ -24,14 +26,29 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
   Future<void> _handleSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
-      // TODO: Implement request submission
-      await Future.delayed(const Duration(seconds: 1)); // Simulated delay
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request submitted successfully')),
+      try {
+        await _requestService.createRequest(
+          _selectedType!,
+          notes:
+              _notesController.text.isNotEmpty ? _notesController.text : null,
         );
-        Navigator.pop(context);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Request submitted successfully')),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error submitting request: ${e.toString()}')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -58,13 +75,12 @@ class _RequestFormScreenState extends ConsumerState<RequestFormScreen> {
                   border: OutlineInputBorder(),
                 ),
                 value: _selectedType,
-                items:
-                    RequestType.values.map((type) {
-                      return DropdownMenuItem(
-                        value: type,
-                        child: Text(type.name.toUpperCase()),
-                      );
-                    }).toList(),
+                items: RequestType.values.map((type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Text(type.name.toUpperCase()),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() => _selectedType = value);
                 },

@@ -9,6 +9,9 @@ import '../screens/staff/dashboard_screen.dart';
 import '../screens/staff/letter_templates_screen.dart';
 import '../screens/admin/admin_dashboard_screen.dart';
 import '../screens/admin/user_management_screen.dart';
+import '../screens/admin/audit_logs_screen.dart';
+import '../screens/admin/system_settings_screen.dart';
+import '../screens/student/dashboard_screen.dart' as student;
 import '../screens/student/request_form_screen.dart';
 import '../screens/student/request_history_screen.dart';
 
@@ -33,23 +36,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         final user = authState.user!;
         switch (user.role) {
           case UserRole.student:
-            return '/request-form';
+            return '/student/dashboard';
           case UserRole.staff:
             return '/dashboard';
           case UserRole.administrator:
             return '/admin';
         }
-      }
-
-      // Check role-based access for protected routes
+      } // Check role-based access for protected routes
       if (isLoggedIn) {
         final user = authState.user!;
-        final location = state.matchedLocation;
-
-        // Admin-only routes
+        final location = state.matchedLocation;        // Admin-only routes
         if (location.startsWith('/admin') || location == '/users') {
           if (user.role != UserRole.administrator) {
-            return '/request-form';
+            return '/student/dashboard';
           }
         }
 
@@ -57,12 +56,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (location == '/dashboard' || location == '/letter-templates') {
           if (user.role != UserRole.staff &&
               user.role != UserRole.administrator) {
-            return '/request-form';
+            return '/student/dashboard';
           }
         }
 
         // Student-only routes
-        if (location == '/request-form' || location == '/request-history') {
+        if (location.startsWith('/student')) {
           if (user.role != UserRole.student) {
             return '/dashboard';
           }
@@ -89,8 +88,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/letter-templates',
         builder: (context, state) => const LetterTemplatesScreen(),
-      ),
-      GoRoute(
+      ),      GoRoute(
         path: '/admin',
         builder: (context, state) => const AdminDashboardScreen(),
       ),
@@ -99,11 +97,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const UserManagementScreen(),
       ),
       GoRoute(
-        path: '/request-form',
+        path: '/admin/audit-logs',
+        builder: (context, state) => const AuditLogsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/system-settings',
+        builder: (context, state) => const SystemSettingsScreen(),
+      ),
+      // Student routes
+      GoRoute(
+        path: '/student/dashboard',
+        builder: (context, state) => const student.DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/student/request-form',
         builder: (context, state) => const RequestFormScreen(),
       ),
       GoRoute(
-        path: '/request-history',
+        path: '/student/request-history',
         builder: (context, state) => const RequestHistoryScreen(),
       ),
     ],

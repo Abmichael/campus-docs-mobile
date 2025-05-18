@@ -12,14 +12,28 @@ part 'api_client.freezed.dart';
 @RestApi(baseUrl: ApiConfig.baseUrl)
 abstract class ApiClient {
   factory ApiClient(Dio dio, {String? baseUrl}) {
-    dio.options = BaseOptions(
-      baseUrl: baseUrl ?? ApiConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 5),
-      receiveTimeout: const Duration(seconds: 3),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+    dio.options.baseUrl = baseUrl ?? ApiConfig.baseUrl;
+
+    // Add token interceptor
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await ApiConfig.token;
+          print('Debug - Token value: $token');
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+            print('Debug - Request headers: ${options.headers}');
+          }
+          return handler.next(options);
+        },
+        onError: (DioException e, handler) async {
+          if (e.response?.statusCode == 401) {
+            // Token expired or invalid, clear it
+            await ApiConfig.clearToken();
+          }
+          return handler.next(e);
+        },
+      ),
     );
 
     // Add error interceptor
