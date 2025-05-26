@@ -5,6 +5,8 @@ import '../../models/request.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/student_dashboard_provider.dart';
 import '../../providers/user_profile_provider.dart';
+import '../../widgets/common_widgets.dart';
+import '../../config/theme_config.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -17,6 +19,10 @@ class DashboardScreen extends ConsumerWidget {
         title: const Text('Student Dashboard'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
               ref.read(authProvider.notifier).logout();
@@ -25,65 +31,132 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Consumer(
-              builder: (context, ref, child) {
-                final greeting = ref.watch(userGreetingProvider);
-                return Text(
-                  greeting,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                );
-              },
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(recentRequestsProvider.future),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+            ThemeConfig.spaceMedium,
+            ThemeConfig.spaceMedium,
+            ThemeConfig.spaceMedium,
+            ThemeConfig.spaceMedium * 5, // Extra space for FAB
             ),
-            const SizedBox(height: 24),
-            _buildQuickActions(context),            const SizedBox(height: 24),
-            const Text(
-              'Recent Requests',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            recentRequestsAsync.when(              data: (recentRequests) {
-                if (recentRequests.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Text('No recent requests found'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome Header
+              Consumer(
+                builder: (context, ref, child) {
+                  final greeting = ref.watch(userGreetingProvider);
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: ThemeConfig.softBlueGradient,
+                      borderRadius:
+                          BorderRadius.circular(ThemeConfig.radiusMedium),
+                      boxShadow: ThemeConfig.cardShadow,
+                    ),
+                    padding: const EdgeInsets.all(ThemeConfig.spaceMedium),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                greeting,
+                                style: ThemeConfig.headlineMedium.copyWith(
+                                  color: ThemeConfig.primaryBlue,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: ThemeConfig.spaceSmall),
+                              Text(
+                                'Manage your academic documents and requests',
+                                style: ThemeConfig.bodyMedium.copyWith(
+                                  color: ThemeConfig.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.school,
+                          size: 48,
+                          color: ThemeConfig.primaryBlue.withOpacity(0.7),
+                        ),
+                      ],
                     ),
                   );
-                }
-                return RefreshIndicator(
-                  onRefresh: () => ref.refresh(recentRequestsProvider.future),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      children: recentRequests.map((request) => _RequestCard(request: request)).toList(),
-                    ),
+                },
+              ),
+
+              const SizedBox(height: ThemeConfig.spaceLarge),
+
+              // Quick Actions
+              const SectionHeader(
+                title: 'Quick Actions',
+                subtitle: 'Common tasks and shortcuts',
+              ),
+              _buildQuickActions(context),
+
+              const SizedBox(height: ThemeConfig.spaceLarge),
+
+              // Recent Requests
+              const SectionHeader(
+                title: 'Recent Requests',
+                subtitle: 'Your latest document requests',
+              ),
+              const SizedBox(height: ThemeConfig.spaceSmall),
+
+              recentRequestsAsync.when(
+                data: (recentRequests) {
+                  if (recentRequests.isEmpty) {
+                    return const EmptyState(
+                      icon: Icons.inbox_outlined,
+                      title: 'No Recent Requests',
+                      message:
+                          'You haven\'t made any requests yet. Start by creating a new request.',
+                      actionText: 'Create Request',
+                    );
+                  }
+                  return Column(
+                    children: recentRequests
+                        .map((request) => _RequestCard(request: request))
+                        .toList(),
+                  );
+                },
+                loading: () =>
+                    const LoadingWidget(message: 'Loading requests...'),
+                error: (error, stackTrace) => ModernCard(
+                  backgroundColor: ThemeConfig.errorRed.withOpacity(0.1),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: ThemeConfig.errorRed,
+                      ),
+                      const SizedBox(width: ThemeConfig.spaceSmall),
+                      Expanded(
+                        child: Text(
+                          'Error loading requests: ${error.toString()}',
+                          style: ThemeConfig.bodyMedium.copyWith(
+                            color: ThemeConfig.errorRed,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                  child: CircularProgressIndicator(),
                 ),
               ),
-              error: (error, stackTrace) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Text('Error loading requests: ${error.toString()}'),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/student/request-form'),
         icon: const Icon(Icons.add),
         label: const Text('New Request'),
+        backgroundColor: ThemeConfig.accentTeal,
       ),
     );
   }
@@ -93,35 +166,32 @@ class DashboardScreen extends ConsumerWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      mainAxisSpacing: ThemeConfig.spaceMedium,
+      crossAxisSpacing: ThemeConfig.spaceMedium,
+      childAspectRatio: 0.8,
       children: [
         _ActionCard(
           icon: Icons.history,
           title: 'Request History',
+          subtitle: 'View all requests',
           onTap: () => context.push('/student/request-history'),
-        ),
-        _ActionCard(
+        ),        _ActionCard(
           icon: Icons.description,
           title: 'My Documents',
-          onTap: () {
-            // TODO: Implement documents screen
-          },
+          subtitle: 'Manage documents',
+          onTap: () => context.push('/student/my-documents'),
         ),
         _ActionCard(
           icon: Icons.person,
           title: 'Profile',
-          onTap: () {
-            // TODO: Implement profile screen
-          },
+          subtitle: 'Update profile',
+          onTap: () => context.push('/settings'),
         ),
         _ActionCard(
           icon: Icons.help,
           title: 'Help & Support',
-          onTap: () {
-            // TODO: Implement help screen
-          },
+          subtitle: 'Get assistance',
+          onTap: () => context.push('/student/help-support'),
         ),
       ],
     );
@@ -131,38 +201,61 @@ class DashboardScreen extends ConsumerWidget {
 class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   const _ActionCard({
     required this.icon,
     required this.title,
+    required this.subtitle,
     required this.onTap,
   });
-
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-              const SizedBox(height: 8),
-              Text(
+    return ModernCard(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(ThemeConfig.spaceMedium),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(ThemeConfig.spaceSmall),
+              decoration: BoxDecoration(
+                color: ThemeConfig.primaryBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(ThemeConfig.radiusSmall),
+              ),
+              child: Icon(
+                icon,
+                size: 24,
+                color: ThemeConfig.primaryBlue,
+              ),
+            ),
+            const SizedBox(height: ThemeConfig.spaceSmall),
+            Flexible(
+              child: Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                style: ThemeConfig.titleMedium.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: ThemeConfig.spaceXSmall),
+            Flexible(
+              child: Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: ThemeConfig.bodySmall.copyWith(
+                  color: ThemeConfig.textSecondary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -176,35 +269,56 @@ class _RequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        title: Text('${request.type.name.toUpperCase()} Request'),
-        subtitle: Text(
-          'Status: ${request.status.name.toUpperCase()}',
-          style: TextStyle(
-            color: _getStatusColor(request.status),
-            fontWeight: FontWeight.bold,
+    return ModernCard(
+      margin: const EdgeInsets.only(bottom: ThemeConfig.spaceMedium),
+      onTap: () {
+        // TODO: Navigate to request details
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${request.type.name.toUpperCase()} Request',
+                  style: ThemeConfig.titleMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              StatusChip(status: request.status.name),
+            ],
           ),
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          // TODO: Navigate to request details
-        },
+          const SizedBox(height: ThemeConfig.spaceSmall),
+          InfoRow(
+            label: 'Created',
+            value: _formatDate(request.createdAt),
+            icon: Icons.calendar_today,
+          ),
+          InfoRow(
+            label: 'Updated',
+            value: _formatDate(request.updatedAt),
+            icon: Icons.update,
+          ),
+          if (request.notes != null && request.notes!.isNotEmpty) ...[
+            const SizedBox(height: ThemeConfig.spaceSmall),
+            Text(
+              'Notes: ${request.notes}',
+              style: ThemeConfig.bodySmall.copyWith(
+                color: ThemeConfig.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Color _getStatusColor(RequestStatus status) {
-    switch (status) {
-      case RequestStatus.pending:
-        return Colors.orange;
-      case RequestStatus.approved:
-        return Colors.green;
-      case RequestStatus.rejected:
-        return Colors.red;
-      case RequestStatus.completed:
-        return Colors.blue;
-    }
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

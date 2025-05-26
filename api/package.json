@@ -1,15 +1,21 @@
 {
   "name": "mit-mobile-api",
   "version": "1.0.0",
-  "type": "module",
-  "scripts": {
+  "type": "module",  "scripts": {
     "start": "node index.js",
+    "dev": "nodemon --ignore db.json --ignore '*.log' index.js",
     "seed": "node seed.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.0.0-beta.1",
     "lowdb": "^7.0.0",
-    "nanoid": "^5.0.4"
+    "nanoid": "^5.0.4",
+    "nodemon": "^3.1.10"
+  },
+  "nodemonConfig": {
+    "ignore": ["db.json", "*.log"],
+    "watch": ["*.js", "*.mjs"],
+    "ext": "js,mjs"
   }
-} 
+}

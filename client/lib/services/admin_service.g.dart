@@ -55,12 +55,12 @@ class _AdminService implements AdminService {
   }
 
   @override
-  Future<List<JsonSerializable>> getAuditLogs() async {
+  Future<List<AuditLog>> getAuditLogs() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<JsonSerializable>>(Options(
+    final _options = _setStreamType<List<AuditLog>>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -77,11 +77,10 @@ class _AdminService implements AdminService {
           baseUrl,
         )));
     final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<JsonSerializable> _value;
+    late List<AuditLog> _value;
     try {
       _value = _result.data!
-          .map((dynamic i) =>
-              JsonSerializable.fromJson(i as Map<String, dynamic>))
+          .map((dynamic i) => AuditLog.fromJson(i as Map<String, dynamic>))
           .toList();
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -91,12 +90,12 @@ class _AdminService implements AdminService {
   }
 
   @override
-  Future<Map<String, JsonSerializable>> getSystemSettings() async {
+  Future<SystemSettings> getSystemSettings() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<Map<String, JsonSerializable>>(Options(
+    final _options = _setStreamType<SystemSettings>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -113,10 +112,9 @@ class _AdminService implements AdminService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late Map<String, JsonSerializable> _value;
+    late SystemSettings _value;
     try {
-      _value = _result.data!.map((k, dynamic v) =>
-          MapEntry(k, JsonSerializable.fromJson(v as Map<String, dynamic>)));
+      _value = SystemSettings.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -125,14 +123,14 @@ class _AdminService implements AdminService {
   }
 
   @override
-  Future<Map<String, JsonSerializable>> updateSystemSettings(
+  Future<SystemSettings> updateSystemSettings(
       Map<String, dynamic> settings) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(settings);
-    final _options = _setStreamType<Map<String, JsonSerializable>>(Options(
+    final _options = _setStreamType<SystemSettings>(Options(
       method: 'PATCH',
       headers: _headers,
       extra: _extra,
@@ -149,10 +147,9 @@ class _AdminService implements AdminService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late Map<String, JsonSerializable> _value;
+    late SystemSettings _value;
     try {
-      _value = _result.data!.map((k, dynamic v) =>
-          MapEntry(k, JsonSerializable.fromJson(v as Map<String, dynamic>)));
+      _value = SystemSettings.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

@@ -32,7 +32,7 @@ void main() {
       email: 'test@example.com',
       role: UserRole.student,
     );
-    final response = LoginResponse(token: 'test-token', user: user);
+    const response = LoginResponse(token: 'test-token', user: user);
     when(mockApiClient.login(any)).thenAnswer((_) async => response);
 
     // Act

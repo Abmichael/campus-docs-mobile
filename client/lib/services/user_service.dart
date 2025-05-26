@@ -23,12 +23,12 @@ class UserService {
       throw Exception('Failed to load users');
     }
   }
-
   Future<User> createUser({
     required String name,
     required String email,
     required String password,
     required UserRole role,
+    String? studentId,
   }) async {
     final token = await ApiConfig.token;
     final response = await http.post(
@@ -42,6 +42,7 @@ class UserService {
         'email': email,
         'password': password,
         'role': role.toString().split('.').last,
+        if (role == UserRole.student && studentId != null) 'studentId': studentId,
       }),
     );
 
@@ -51,12 +52,12 @@ class UserService {
       throw Exception('Failed to create user');
     }
   }
-
   Future<User> updateUser({
     required String id,
     required String name,
     required String email,
     required UserRole role,
+    String? studentId,
   }) async {
     final token = await ApiConfig.token;
     final response = await http.patch(
@@ -69,6 +70,7 @@ class UserService {
         'name': name,
         'email': email,
         'role': role.toString().split('.').last,
+        if (role == UserRole.student && studentId != null) 'studentId': studentId,
       }),
     );
 

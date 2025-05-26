@@ -14,6 +14,9 @@ _$RequestImpl _$$RequestImplFromJson(Map<String, dynamic> json) =>
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       notes: json['notes'] as String?,
+      userId: json['userId'] as String?,
+      userName: json['userName'] as String?,
+      userStudentId: json['userStudentId'] as String?,
     );
 
 Map<String, dynamic> _$$RequestImplToJson(_$RequestImpl instance) =>
@@ -24,6 +27,9 @@ Map<String, dynamic> _$$RequestImplToJson(_$RequestImpl instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'notes': instance.notes,
+      'userId': instance.userId,
+      'userName': instance.userName,
+      'userStudentId': instance.userStudentId,
     };
 
 const _$RequestTypeEnumMap = {

@@ -10,14 +10,26 @@ class AuthState {
   final User? user;
   final String? error;
   final bool isLoading;
+  final bool hasSeenOnboarding;
 
-  const AuthState({this.user, this.error, this.isLoading = false});
+  const AuthState({
+    this.user, 
+    this.error, 
+    this.isLoading = false,
+    this.hasSeenOnboarding = false,
+  });
 
-  AuthState copyWith({User? user, String? error, bool? isLoading}) {
+  AuthState copyWith({
+    User? user, 
+    String? error, 
+    bool? isLoading,
+    bool? hasSeenOnboarding,
+  }) {
     return AuthState(
       user: user ?? this.user,
       error: error,
       isLoading: isLoading ?? this.isLoading,
+      hasSeenOnboarding: hasSeenOnboarding ?? this.hasSeenOnboarding,
     );
   }
 }
@@ -43,14 +55,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final ApiClient _apiClient;
   final SharedPreferences _prefs;
   static const _userKey = 'cached_user';
+  static const _onboardingKey = 'has_seen_onboarding';
 
   AuthNotifier(this._apiClient, this._prefs) : super(const AuthState()) {
     _initializeFromCache();
   }
-
   Future<void> _initializeFromCache() async {
     final userJson = _prefs.getString(_userKey);
     final token = await ApiConfig.token;
+    final hasSeenOnboarding = _prefs.getBool(_onboardingKey) ?? false;
 
     if (userJson != null && token != null) {
       try {
@@ -58,11 +71,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = state.copyWith(
           user: user.copyWith(token: token),
           isLoading: false,
+          hasSeenOnboarding: hasSeenOnboarding,
         );
       } catch (e) {
         // If there's an error parsing cached data, clear it
         await _clearCache();
       }
+    } else {
+      state = state.copyWith(hasSeenOnboarding: hasSeenOnboarding);
     }
   }
 
@@ -70,9 +86,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _prefs.setString(_userKey, json.encode(user.toJson()));
     await ApiConfig.setToken(token);
   }
-
   Future<void> _clearCache() async {
     await _prefs.remove(_userKey);
+    await _prefs.remove(_onboardingKey);
     await ApiConfig.clearToken();
   }
 
@@ -120,8 +136,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
   }
-
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  Future<void> markOnboardingCompleted() async {
+    await _prefs.setBool(_onboardingKey, true);
+    state = state.copyWith(hasSeenOnboarding: true);
   }
 }

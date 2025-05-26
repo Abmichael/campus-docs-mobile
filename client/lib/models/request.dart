@@ -24,14 +24,16 @@ enum RequestStatus {
 }
 
 @freezed
-class Request with _$Request {
-  const factory Request({
+class Request with _$Request {  const factory Request({
     required String id,
     required RequestType type,
     required RequestStatus status,
     required DateTime createdAt,
     required DateTime updatedAt,
     String? notes,
+    String? userId,
+    String? userName,
+    String? userStudentId,
   }) = _Request;
 
   factory Request.fromJson(Map<String, dynamic> json) =>

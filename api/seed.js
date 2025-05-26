@@ -8,6 +8,7 @@ const defaultData = {
   requests: [],
   templates: [],
   auditLogs: [],
+  letters: [],
   settings: {
     systemName: 'MIT Mobile App',
     emailFrom: 'noreply@mit.edu',
@@ -30,12 +31,11 @@ db.data = {
     role: 'administrator',
     token: null
   }],
-  requests: [],
-  templates: [{
+  requests: [],  templates: [{
     id: nanoid(),
     title: 'Enrollment Verification',
-    body: 'This is to certify that {{student_name}} is currently enrolled at MIT.\n\nReference No: {{ref_no}}\nIssue Date: {{issue_date}}',
-    placeholders: ['student_name', 'ref_no', 'issue_date']
+    body: 'This is to certify that [student_name] is currently enrolled at MIT.\n\n',
+    placeholders: ['student_name']
   }]
 };
 

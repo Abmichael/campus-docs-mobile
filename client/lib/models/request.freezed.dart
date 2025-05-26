@@ -26,6 +26,9 @@ mixin _$Request {
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
+  String? get userId => throw _privateConstructorUsedError;
+  String? get userName => throw _privateConstructorUsedError;
+  String? get userStudentId => throw _privateConstructorUsedError;
 
   /// Serializes this Request to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -47,7 +50,10 @@ abstract class $RequestCopyWith<$Res> {
       RequestStatus status,
       DateTime createdAt,
       DateTime updatedAt,
-      String? notes});
+      String? notes,
+      String? userId,
+      String? userName,
+      String? userStudentId});
 }
 
 /// @nodoc
@@ -71,6 +77,9 @@ class _$RequestCopyWithImpl<$Res, $Val extends Request>
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? notes = freezed,
+    Object? userId = freezed,
+    Object? userName = freezed,
+    Object? userStudentId = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -97,6 +106,18 @@ class _$RequestCopyWithImpl<$Res, $Val extends Request>
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      userId: freezed == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      userName: freezed == userName
+          ? _value.userName
+          : userName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      userStudentId: freezed == userStudentId
+          ? _value.userStudentId
+          : userStudentId // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -114,7 +135,10 @@ abstract class _$$RequestImplCopyWith<$Res> implements $RequestCopyWith<$Res> {
       RequestStatus status,
       DateTime createdAt,
       DateTime updatedAt,
-      String? notes});
+      String? notes,
+      String? userId,
+      String? userName,
+      String? userStudentId});
 }
 
 /// @nodoc
@@ -136,6 +160,9 @@ class __$$RequestImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? notes = freezed,
+    Object? userId = freezed,
+    Object? userName = freezed,
+    Object? userStudentId = freezed,
   }) {
     return _then(_$RequestImpl(
       id: null == id
@@ -162,6 +189,18 @@ class __$$RequestImplCopyWithImpl<$Res>
           ? _value.notes
           : notes // ignore: cast_nullable_to_non_nullable
               as String?,
+      userId: freezed == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      userName: freezed == userName
+          ? _value.userName
+          : userName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      userStudentId: freezed == userStudentId
+          ? _value.userStudentId
+          : userStudentId // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -175,7 +214,10 @@ class _$RequestImpl implements _Request {
       required this.status,
       required this.createdAt,
       required this.updatedAt,
-      this.notes});
+      this.notes,
+      this.userId,
+      this.userName,
+      this.userStudentId});
 
   factory _$RequestImpl.fromJson(Map<String, dynamic> json) =>
       _$$RequestImplFromJson(json);
@@ -192,10 +234,16 @@ class _$RequestImpl implements _Request {
   final DateTime updatedAt;
   @override
   final String? notes;
+  @override
+  final String? userId;
+  @override
+  final String? userName;
+  @override
+  final String? userStudentId;
 
   @override
   String toString() {
-    return 'Request(id: $id, type: $type, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, notes: $notes)';
+    return 'Request(id: $id, type: $type, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, notes: $notes, userId: $userId, userName: $userName, userStudentId: $userStudentId)';
   }
 
   @override
@@ -210,13 +258,18 @@ class _$RequestImpl implements _Request {
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt) &&
-            (identical(other.notes, notes) || other.notes == notes));
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.userName, userName) ||
+                other.userName == userName) &&
+            (identical(other.userStudentId, userStudentId) ||
+                other.userStudentId == userStudentId));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, type, status, createdAt, updatedAt, notes);
+  int get hashCode => Object.hash(runtimeType, id, type, status, createdAt,
+      updatedAt, notes, userId, userName, userStudentId);
 
   /// Create a copy of Request
   /// with the given fields replaced by the non-null parameter values.
@@ -241,7 +294,10 @@ abstract class _Request implements Request {
       required final RequestStatus status,
       required final DateTime createdAt,
       required final DateTime updatedAt,
-      final String? notes}) = _$RequestImpl;
+      final String? notes,
+      final String? userId,
+      final String? userName,
+      final String? userStudentId}) = _$RequestImpl;
 
   factory _Request.fromJson(Map<String, dynamic> json) = _$RequestImpl.fromJson;
 
@@ -257,6 +313,12 @@ abstract class _Request implements Request {
   DateTime get updatedAt;
   @override
   String? get notes;
+  @override
+  String? get userId;
+  @override
+  String? get userName;
+  @override
+  String? get userStudentId;
 
   /// Create a copy of Request
   /// with the given fields replaced by the non-null parameter values.

@@ -6,6 +6,24 @@ import '../config/api_config.dart';
 class LetterTemplateService {
   final String baseUrl = ApiConfig.baseUrl;
 
+  Future<List<LetterTemplate>> fetchTemplates() async {
+    final token = await ApiConfig.token;
+    final response = await http.get(
+      Uri.parse('$baseUrl/letter-templates'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => LetterTemplate.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load letter templates');
+    }
+  }
+
   Future<List<LetterTemplate>> getTemplates() async {
     final token = await ApiConfig.token;
     final response = await http.get(

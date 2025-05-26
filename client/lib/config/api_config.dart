@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConfig {
-  static const String baseUrl = 'http://192.168.1.2:4000';
+  static const String baseUrl = 'http://192.168.2.6:4000';
   static const String _tokenKey = 'auth_token';
 
   static Future<String?> get token async {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../config/theme_config.dart';
+import '../../widgets/common_widgets.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -35,50 +37,89 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Forgot Password')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Enter your email address and we\'ll send you instructions to reset your password.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
+      body: GradientBackground(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(ThemeConfig.spaceLarge),
+            child: ModernCard(
+              child: Padding(
+                padding: const EdgeInsets.all(ThemeConfig.spaceLarge),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Icon and Title
+                      const Icon(
+                        Icons.lock_reset,
+                        size: 64,
+                        color: ThemeConfig.primaryBlue,
+                      ),
+                      const SizedBox(height: ThemeConfig.spaceMedium),
+                      Text(
+                        'Reset Password',
+                        style: ThemeConfig.headlineMedium.copyWith(
+                          color: ThemeConfig.primaryBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: ThemeConfig.spaceSmall),
+                      Text(
+                        'Enter your email address and we\'ll send you instructions to reset your password.',
+                        textAlign: TextAlign.center,
+                        style: ThemeConfig.bodyMedium.copyWith(
+                          color: ThemeConfig.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: ThemeConfig.spaceLarge),
+                      
+                      // Email Field
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: ThemeConfig.spaceLarge),
+                      
+                      // Reset Button
+                      if (_isLoading)
+                        const LoadingWidget(message: 'Sending reset instructions...')
+                      else
+                        ActionButton(
+                          onPressed: _handleSubmit,
+                          text: 'Send Reset Instructions',
+                          icon: Icons.send,
+                        ),
+                      const SizedBox(height: ThemeConfig.spaceMedium),
+                      
+                      // Back to Login
+                      TextButton(
+                        onPressed: () => context.go('/login'),
+                        child: Text(
+                          'Back to Login',
+                          style: ThemeConfig.bodyMedium.copyWith(
+                            color: ThemeConfig.primaryBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 24),
-              if (_isLoading)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton(
-                  onPressed: _handleSubmit,
-                  child: const Text('Reset Password'),
-                ),
-              TextButton(
-                onPressed: () => context.go('/login'),
-                child: const Text('Back to Login'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

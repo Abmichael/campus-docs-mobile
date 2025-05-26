@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../services/admin_service.dart';
+import '../models/audit_log.dart';
+import '../models/system_settings.dart';
 
 final adminServiceProvider = Provider((ref) {
   final dio = Dio();
@@ -18,14 +20,13 @@ final dashboardStatsProvider = FutureProvider<Map<String, int>>((ref) async {
 });
 
 final auditLogsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+    FutureProvider<List<AuditLog>>((ref) async {
   final service = ref.watch(adminServiceProvider);
-  final data = await service.getAuditLogs();
-  return data.cast<Map<String, dynamic>>();
+  return await service.getAuditLogs();
 });
 
 final systemSettingsProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+    FutureProvider<SystemSettings>((ref) async {
   final service = ref.watch(adminServiceProvider);
-  return service.getSystemSettings();
+  return await service.getSystemSettings();
 });

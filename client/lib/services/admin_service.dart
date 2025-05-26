@@ -1,8 +1,9 @@
 import 'package:retrofit/retrofit.dart';
 import 'package:dio/dio.dart';
 import '../config/api_config.dart';
-import 'package:json_annotation/json_annotation.dart';
 import '../models/dashboard_stats.dart';
+import '../models/audit_log.dart';
+import '../models/system_settings.dart';
 
 part 'admin_service.g.dart';
 
@@ -33,17 +34,14 @@ abstract class AdminService {
 
     return _AdminService(dio, baseUrl: baseUrl);
   }
-
   @GET('/admin/stats')
   Future<DashboardStats> getDashboardStats();
 
   @GET('/admin/audit-logs')
-  Future<List<JsonSerializable>> getAuditLogs();
-
-  @GET('/admin/settings')
-  Future<Map<String, JsonSerializable>> getSystemSettings();
+  Future<List<AuditLog>> getAuditLogs();  @GET('/admin/settings')
+  Future<SystemSettings> getSystemSettings();
 
   @PATCH('/admin/settings')
-  Future<Map<String, JsonSerializable>> updateSystemSettings(
+  Future<SystemSettings> updateSystemSettings(
       @Body() Map<String, dynamic> settings);
 }
