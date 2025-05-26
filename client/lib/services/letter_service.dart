@@ -4,12 +4,12 @@ import '../models/letter.dart';
 import '../config/api_config.dart';
 
 class LetterService {
-  final String baseUrl = ApiConfig.baseUrl;
-
+  Future<String> get baseUrl => ApiConfig.baseUrl;
   Future<List<Letter>> getStudentLetters() async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/letters/my-documents'),
+      Uri.parse('$url/letters/my-documents'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -23,11 +23,11 @@ class LetterService {
       throw Exception('Failed to load letters');
     }
   }
-
   Future<List<Letter>> getStaffCreatedLetters() async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/letters/my-created'),
+      Uri.parse('$url/letters/my-created'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -41,11 +41,11 @@ class LetterService {
       throw Exception('Failed to load created letters');
     }
   }
-
   Future<Letter> getLetter(String letterId) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/letters/$letterId'),
+      Uri.parse('$url/letters/$letterId'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -63,11 +63,11 @@ class LetterService {
     required String requestId,
     required String content,
     String? templateId,
-    Map<String, String>? templateVariables,
-  }) async {
+    Map<String, String>? templateVariables,  }) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.post(
-      Uri.parse('$baseUrl/letters'),
+      Uri.parse('$url/letters'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

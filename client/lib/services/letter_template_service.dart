@@ -4,12 +4,12 @@ import '../models/letter_template.dart';
 import '../config/api_config.dart';
 
 class LetterTemplateService {
-  final String baseUrl = ApiConfig.baseUrl;
-
+  Future<String> get baseUrl => ApiConfig.baseUrl;
   Future<List<LetterTemplate>> fetchTemplates() async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/letter-templates'),
+      Uri.parse('$url/letter-templates'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -23,11 +23,11 @@ class LetterTemplateService {
       throw Exception('Failed to load letter templates');
     }
   }
-
   Future<List<LetterTemplate>> getTemplates() async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/letter-templates'),
+      Uri.parse('$url/letter-templates'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -45,11 +45,11 @@ class LetterTemplateService {
   Future<LetterTemplate> createTemplate({
     required String title,
     required String body,
-    required List<String> placeholders,
-  }) async {
+    required List<String> placeholders,  }) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.post(
-      Uri.parse('$baseUrl/letter-templates'),
+      Uri.parse('$url/letter-templates'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -72,11 +72,11 @@ class LetterTemplateService {
     required String id,
     required String title,
     required String body,
-    required List<String> placeholders,
-  }) async {
+    required List<String> placeholders,  }) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.patch(
-      Uri.parse('$baseUrl/letter-templates/$id'),
+      Uri.parse('$url/letter-templates/$id'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -94,11 +94,11 @@ class LetterTemplateService {
       throw Exception('Failed to update letter template');
     }
   }
-
   Future<void> deleteTemplate(String id) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.delete(
-      Uri.parse('$baseUrl/letter-templates/$id'),
+      Uri.parse('$url/letter-templates/$id'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

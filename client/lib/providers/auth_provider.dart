@@ -60,6 +60,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._apiClient, this._prefs) : super(const AuthState()) {
     _initializeFromCache();
   }
+
   Future<void> _initializeFromCache() async {
     final userJson = _prefs.getString(_userKey);
     final token = await ApiConfig.token;
@@ -86,17 +87,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _prefs.setString(_userKey, json.encode(user.toJson()));
     await ApiConfig.setToken(token);
   }
+
   Future<void> _clearCache() async {
     await _prefs.remove(_userKey);
     await _prefs.remove(_onboardingKey);
     await ApiConfig.clearToken();
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password, {String? customApiUrl}) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _apiClient.login({
+      // Save custom API URL if provided
+      if (customApiUrl != null && customApiUrl.isNotEmpty) {
+        await ApiConfig.setBaseUrl(customApiUrl);
+      }
+
+      // Create API client with custom URL if provided
+      final apiClient = customApiUrl != null && customApiUrl.isNotEmpty
+          ? await ApiClient.createWithCustomUrl(customUrl: customApiUrl)
+          : _apiClient;
+
+      final response = await apiClient.login({
         'email': email,
         'password': password,
       });

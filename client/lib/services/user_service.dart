@@ -4,7 +4,7 @@ import '../models/user.dart';
 import '../config/api_config.dart';
 
 class UserService {
-  final String baseUrl = ApiConfig.baseUrl;
+  Future<String> get baseUrl async => await ApiConfig.baseUrl;
 
   Future<List<User>> getUsers() async {
     final token = await ApiConfig.token;

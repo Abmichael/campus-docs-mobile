@@ -49,10 +49,11 @@ class PaginationInfo {
 }
 
 class RequestService {
-  final String baseUrl = ApiConfig.baseUrl;  Future<List<Request>> getRequests() async {
+  Future<String> get baseUrl => ApiConfig.baseUrl;  Future<List<Request>> getRequests() async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/requests'),
+      Uri.parse('$url/requests'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -71,15 +72,15 @@ class RequestService {
     int page = 1,
     int limit = 10,
     String? status,
-  }) async {
-    final token = await ApiConfig.token;
+  }) async {    final token = await ApiConfig.token;
+    final url = await baseUrl;
     final queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
       if (status != null) 'status': status,
     };
     
-    final uri = Uri.parse('$baseUrl/requests').replace(queryParameters: queryParams);
+    final uri = Uri.parse('$url/requests').replace(queryParameters: queryParams);
     final response = await http.get(
       uri,
       headers: {
@@ -95,11 +96,11 @@ class RequestService {
       throw Exception('Failed to load requests');
     }
   }
-
   Future<Request> createRequest(RequestType type, {String? notes}) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.post(
-      Uri.parse('$baseUrl/requests'),
+      Uri.parse('$url/requests'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -116,11 +117,11 @@ class RequestService {
       throw Exception('Failed to create request');
     }
   }
-
   Future<Request> updateRequestStatus(String id, RequestStatus status) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.patch(
-      Uri.parse('$baseUrl/requests/$id'),
+      Uri.parse('$url/requests/$id'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

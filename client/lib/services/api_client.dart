@@ -9,10 +9,10 @@ import '../models/request.dart';
 part 'api_client.g.dart';
 part 'api_client.freezed.dart';
 
-@RestApi(baseUrl: ApiConfig.baseUrl)
+@RestApi()
 abstract class ApiClient {
   factory ApiClient(Dio dio, {String? baseUrl}) {
-    dio.options.baseUrl = baseUrl ?? ApiConfig.baseUrl;
+    dio.options.baseUrl = baseUrl ?? ApiConfig.defaultBaseUrl;
 
     // Add token interceptor
     dio.interceptors.add(
@@ -95,6 +95,12 @@ abstract class ApiClient {
     );
 
     return _ApiClient(dio, baseUrl: baseUrl);
+  }
+
+  static Future<ApiClient> createWithCustomUrl({String? customUrl}) async {
+    final dio = Dio();
+    final baseUrl = customUrl ?? await ApiConfig.baseUrl;
+    return ApiClient(dio, baseUrl: baseUrl);
   }
 
   @POST('/auth/login')

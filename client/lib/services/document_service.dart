@@ -4,12 +4,12 @@ import '../models/document.dart';
 import '../config/api_config.dart';
 
 class DocumentService {
-  final String baseUrl = ApiConfig.baseUrl;
-
+  Future<String> get baseUrl => ApiConfig.baseUrl;
   Future<List<Document>> getStudentDocuments() async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/letters'),
+      Uri.parse('$url/letters'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -23,11 +23,11 @@ class DocumentService {
       throw Exception('Failed to load documents');
     }
   }
-
   Future<Document> getDocument(String documentId) async {
     final token = await ApiConfig.token;
+    final url = await baseUrl;
     final response = await http.get(
-      Uri.parse('$baseUrl/letters/$documentId'),
+      Uri.parse('$url/letters/$documentId'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

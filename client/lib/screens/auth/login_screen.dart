@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/snackbar_utils.dart';
 import '../../config/theme_config.dart';
+import '../../config/api_config.dart';
 import '../../widgets/common_widgets.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -17,19 +18,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _apiUrlController = TextEditingController();
+  bool _showAdvancedSettings = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedApiUrl();
+  }
+
+  Future<void> _loadSavedApiUrl() async {
+    final savedUrl = await ApiConfig.baseUrl;
+    if (savedUrl != ApiConfig.defaultBaseUrl) {
+      _apiUrlController.text = savedUrl;
+    }
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _apiUrlController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
+      final customUrl = _apiUrlController.text.trim().isEmpty 
+          ? null 
+          : _apiUrlController.text.trim();
+      
       await ref
           .read(authProvider.notifier)
-          .login(_emailController.text, _passwordController.text);
+          .login(
+            _emailController.text, 
+            _passwordController.text,
+            customApiUrl: customUrl,
+          );
     }
   }
 
@@ -97,8 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             },
                           ),
                           const SizedBox(height: ThemeConfig.spaceMedium),
-                          
-                          // Password Field
+                            // Password Field
                           TextFormField(
                             controller: _passwordController,
                             decoration: const InputDecoration(
@@ -114,7 +138,63 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: ThemeConfig.spaceLarge),
+                          const SizedBox(height: ThemeConfig.spaceMedium),
+                            // Advanced Settings Expansion
+                          ExpansionTile(
+                            initiallyExpanded: _showAdvancedSettings,
+                            title: Row(
+                              children: [
+                                Icon(
+                                  Icons.settings,
+                                  color: ThemeConfig.primaryBlue,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: ThemeConfig.spaceSmall),
+                                Text(
+                                  'Advanced Settings',
+                                  style: ThemeConfig.bodyMedium.copyWith(
+                                    color: ThemeConfig.primaryBlue,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            tilePadding: EdgeInsets.zero,
+                            childrenPadding: const EdgeInsets.only(bottom: ThemeConfig.spaceMedium),
+                            onExpansionChanged: (expanded) {
+                              setState(() {
+                                _showAdvancedSettings = expanded;
+                              });
+                            },
+                            children: [
+                              const SizedBox(height: ThemeConfig.spaceSmall),
+                              TextFormField(
+                                controller: _apiUrlController,
+                                decoration: InputDecoration(
+                                  labelText: 'Custom API URL (Optional)',
+                                  hintText: 'e.g., http://192.168.1.100:4000',
+                                  prefixIcon: const Icon(Icons.cloud_outlined),
+                                  border: const OutlineInputBorder(),
+                                  helperText: 'Leave empty to use default server',
+                                  helperStyle: ThemeConfig.bodySmall.copyWith(
+                                    color: ThemeConfig.textSecondary,
+                                  ),
+                                ),
+                                keyboardType: TextInputType.url,
+                                validator: (value) {
+                                  if (value != null && value.isNotEmpty) {
+                                    // Basic URL validation
+                                    final urlPattern = RegExp(r'^https?://[^\s/$.?#].[^\s]*$');
+                                    if (!urlPattern.hasMatch(value)) {
+                                      return 'Please enter a valid URL';
+                                    }
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: ThemeConfig.spaceMedium),
                           
                           // Login Button
                           if (authState.isLoading)

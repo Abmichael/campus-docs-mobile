@@ -10,7 +10,7 @@ part 'admin_service.g.dart';
 @RestApi()
 abstract class AdminService {
   factory AdminService(Dio dio, {String? baseUrl}) {
-    dio.options.baseUrl = baseUrl ?? ApiConfig.baseUrl;
+    dio.options.baseUrl = baseUrl ?? ApiConfig.defaultBaseUrl;
 
     // Add token interceptor
     dio.interceptors.add(
@@ -30,10 +30,15 @@ abstract class AdminService {
           return handler.next(e);
         },
       ),
-    );
-
-    return _AdminService(dio, baseUrl: baseUrl);
+    );    return _AdminService(dio, baseUrl: baseUrl);
   }
+
+  static Future<AdminService> createWithCustomUrl({String? customUrl}) async {
+    final dio = Dio();
+    final baseUrl = customUrl ?? await ApiConfig.baseUrl;
+    return AdminService(dio, baseUrl: baseUrl);
+  }
+
   @GET('/admin/stats')
   Future<DashboardStats> getDashboardStats();
 
