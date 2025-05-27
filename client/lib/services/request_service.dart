@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/request.dart';
-import '../config/api_config.dart';
+import 'http_service.dart';
 
 class PaginatedRequestsResponse {
   final List<Request> requests;
@@ -49,16 +48,10 @@ class PaginationInfo {
 }
 
 class RequestService {
-  Future<String> get baseUrl => ApiConfig.baseUrl;  Future<List<Request>> getRequests() async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/requests'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+  final HttpService _httpService = HttpService();
+
+  Future<List<Request>> getRequests() async {
+    final response = await _httpService.get('/requests');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -72,22 +65,14 @@ class RequestService {
     int page = 1,
     int limit = 10,
     String? status,
-  }) async {    final token = await ApiConfig.token;
-    final url = await baseUrl;
+  }) async {
     final queryParams = {
       'page': page.toString(),
       'limit': limit.toString(),
       if (status != null) 'status': status,
     };
     
-    final uri = Uri.parse('$url/requests').replace(queryParameters: queryParams);
-    final response = await http.get(
-      uri,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/requests', queryParams: queryParams);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -96,20 +81,12 @@ class RequestService {
       throw Exception('Failed to load requests');
     }
   }
+
   Future<Request> createRequest(RequestType type, {String? notes}) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.post(
-      Uri.parse('$url/requests'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'type': type.toString().split('.').last,
-        'notes': notes,
-      }),
-    );
+    final response = await _httpService.post('/requests', body: {
+      'type': type.toString().split('.').last,
+      'notes': notes,
+    });
 
     if (response.statusCode == 201) {
       return Request.fromJson(json.decode(response.body));
@@ -117,19 +94,11 @@ class RequestService {
       throw Exception('Failed to create request');
     }
   }
+
   Future<Request> updateRequestStatus(String id, RequestStatus status) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.patch(
-      Uri.parse('$url/requests/$id'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'status': status.toString().split('.').last,
-      }),
-    );
+    final response = await _httpService.patch('/requests/$id', body: {
+      'status': status.toString().split('.').last,
+    });
 
     if (response.statusCode == 200) {
       return Request.fromJson(json.decode(response.body));

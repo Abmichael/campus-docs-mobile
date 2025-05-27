@@ -1,20 +1,12 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/document.dart';
-import '../config/api_config.dart';
+import 'http_service.dart';
 
 class DocumentService {
-  Future<String> get baseUrl => ApiConfig.baseUrl;
+  final HttpService _httpService = HttpService();
+
   Future<List<Document>> getStudentDocuments() async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/letters'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/letters');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -23,16 +15,9 @@ class DocumentService {
       throw Exception('Failed to load documents');
     }
   }
+
   Future<Document> getDocument(String documentId) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/letters/$documentId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/letters/$documentId');
 
     if (response.statusCode == 200) {
       return Document.fromJson(json.decode(response.body));

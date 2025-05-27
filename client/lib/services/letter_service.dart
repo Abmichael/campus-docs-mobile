@@ -1,20 +1,12 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/letter.dart';
-import '../config/api_config.dart';
+import 'http_service.dart';
 
 class LetterService {
-  Future<String> get baseUrl => ApiConfig.baseUrl;
+  final HttpService _httpService = HttpService();
+
   Future<List<Letter>> getStudentLetters() async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/letters/my-documents'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/letters/my-documents');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -23,16 +15,9 @@ class LetterService {
       throw Exception('Failed to load letters');
     }
   }
+
   Future<List<Letter>> getStaffCreatedLetters() async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/letters/my-created'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/letters/my-created');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -41,16 +26,9 @@ class LetterService {
       throw Exception('Failed to load created letters');
     }
   }
+
   Future<Letter> getLetter(String letterId) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/letters/$letterId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/letters/$letterId');
 
     if (response.statusCode == 200) {
       return Letter.fromJson(json.decode(response.body));
@@ -63,22 +41,14 @@ class LetterService {
     required String requestId,
     required String content,
     String? templateId,
-    Map<String, String>? templateVariables,  }) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.post(
-      Uri.parse('$url/letters'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'requestId': requestId,
-        'content': content,
-        if (templateId != null) 'templateId': templateId,
-        if (templateVariables != null) 'templateVariables': templateVariables,
-      }),
-    );
+    Map<String, String>? templateVariables,
+  }) async {
+    final response = await _httpService.post('/letters', body: {
+      'requestId': requestId,
+      'content': content,
+      if (templateId != null) 'templateId': templateId,
+      if (templateVariables != null) 'templateVariables': templateVariables,
+    });
 
     if (response.statusCode == 201) {
       return Letter.fromJson(json.decode(response.body));
@@ -86,6 +56,7 @@ class LetterService {
       throw Exception('Failed to create letter');
     }
   }
+
   String applyTemplate(String templateBody, Map<String, String> variables) {
     String result = templateBody;
     variables.forEach((key, value) {

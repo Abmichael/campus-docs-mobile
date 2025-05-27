@@ -1,20 +1,12 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/letter_template.dart';
-import '../config/api_config.dart';
+import 'http_service.dart';
 
 class LetterTemplateService {
-  Future<String> get baseUrl => ApiConfig.baseUrl;
+  final HttpService _httpService = HttpService();
+
   Future<List<LetterTemplate>> fetchTemplates() async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/letter-templates'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/letter-templates');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -23,16 +15,9 @@ class LetterTemplateService {
       throw Exception('Failed to load letter templates');
     }
   }
+
   Future<List<LetterTemplate>> getTemplates() async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.get(
-      Uri.parse('$url/letter-templates'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.get('/letter-templates');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -45,21 +30,13 @@ class LetterTemplateService {
   Future<LetterTemplate> createTemplate({
     required String title,
     required String body,
-    required List<String> placeholders,  }) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.post(
-      Uri.parse('$url/letter-templates'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'title': title,
-        'body': body,
-        'placeholders': placeholders,
-      }),
-    );
+    required List<String> placeholders,
+  }) async {
+    final response = await _httpService.post('/letter-templates', body: {
+      'title': title,
+      'body': body,
+      'placeholders': placeholders,
+    });
 
     if (response.statusCode == 201) {
       return LetterTemplate.fromJson(json.decode(response.body));
@@ -72,21 +49,13 @@ class LetterTemplateService {
     required String id,
     required String title,
     required String body,
-    required List<String> placeholders,  }) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.patch(
-      Uri.parse('$url/letter-templates/$id'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'title': title,
-        'body': body,
-        'placeholders': placeholders,
-      }),
-    );
+    required List<String> placeholders,
+  }) async {
+    final response = await _httpService.patch('/letter-templates/$id', body: {
+      'title': title,
+      'body': body,
+      'placeholders': placeholders,
+    });
 
     if (response.statusCode == 200) {
       return LetterTemplate.fromJson(json.decode(response.body));
@@ -94,16 +63,9 @@ class LetterTemplateService {
       throw Exception('Failed to update letter template');
     }
   }
+
   Future<void> deleteTemplate(String id) async {
-    final token = await ApiConfig.token;
-    final url = await baseUrl;
-    final response = await http.delete(
-      Uri.parse('$url/letter-templates/$id'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await _httpService.delete('/letter-templates/$id');
 
     if (response.statusCode != 200) {
       throw Exception('Failed to delete letter template');
