@@ -512,7 +512,7 @@ class _LetterContent extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.school,
                   color: ThemeConfig.primaryBlue,
                   size: 16,

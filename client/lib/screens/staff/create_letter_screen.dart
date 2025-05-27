@@ -19,7 +19,7 @@ class _CreateLetterScreenState extends ConsumerState<CreateLetterScreen> {
   String _body = '';
   bool _isSubmitting = false;
   List<LetterTemplate> _templates = [];
-  Map<String, TextEditingController> _variableControllers = {};
+  final Map<String, TextEditingController> _variableControllers = {};
   final _bodyController = TextEditingController();
   final _refNoController = TextEditingController(); // Add ref number controller
 
@@ -33,7 +33,9 @@ class _CreateLetterScreenState extends ConsumerState<CreateLetterScreen> {
   void dispose() {
     _bodyController.dispose();
     _refNoController.dispose(); // Dispose ref number controller
-    _variableControllers.values.forEach((controller) => controller.dispose());
+    for (var controller in _variableControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 

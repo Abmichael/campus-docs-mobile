@@ -144,7 +144,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             initiallyExpanded: _showAdvancedSettings,
                             title: Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.settings,
                                   color: ThemeConfig.primaryBlue,
                                   size: 20,
