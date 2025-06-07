@@ -1,4 +1,3 @@
-```markdown
 # Campus Docs Mobile 📲
 
 <img src="https://img.shields.io/badge/Flutter-5.0-blue" />
